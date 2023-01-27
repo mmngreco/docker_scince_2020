@@ -8,19 +8,56 @@
 set -euo pipefail
 IFS=$'\n\t'
 # The directory from which the script is running
-readonly LOCAL_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+# readonly OUT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+readonly OUT_DIR=/scince_2020
 
 TEMP_DIR="$(mktemp -d)"
 
+echo TEMP_DIR="$TEMP_DIR"
+
 # index starts at zero
-declare -a states=("national" "ags" "bc" "bcs" "camp" "coah" "col"
-                   "chis" "chih" "cdmx" "dgo" "gto" "gro" "hgo" "jal"
-                   "mex" "mich" "mor" "nay" "nl" "oax" "pue" "qro"
-                   "qroo" "slp" "sin" "son" "tab" "tamps" "tlax" "ver"
-                   "yuc" "zac");
+declare -a states=(
+    "national"
+    "ags"
+    "bc"
+    "bcs"
+    "camp"
+    "coah"
+    "col"
+    "chis"
+    "chih"
+    "cdmx"
+    "dgo"
+    "gto"
+    "gro"
+    "hgo"
+    "jal"
+    "mex"
+    "mich"
+    "mor"
+    "nay"
+    "nl"
+    "oax"
+    "pue"
+    "qro"
+    "qroo"
+    "slp"
+    "sin"
+    "son"
+    "tab"
+    "tamps"
+    "tlax"
+    "ver"
+    "yuc"
+    "zac"
+    );
+
+# print states
+echo states="${states[@]}"
+echo local_dir="$OUT_DIR"
 
 download_states() {
-    mkdir -p "$LOCAL_DIR"/scince_2020
+    mkdir -p "$OUT_DIR"
     for i in {0..32}
     do
         echo "Downloading ${states[$i]}..."
@@ -31,17 +68,14 @@ download_states() {
         else
             FILENUM="$i"
         fi
-        curl -sLo "$TEMP_DIR"/scince_$FILENUM.exe \
-             https://gaia.inegi.org.mx/scince2020desktop/$FILENUM/SCINCE2020_DATOS_$FILENUM.exe
-        (cd "$TEMP_DIR" && \
-             innoextract \
-                 --lowercase \
-                 --silent "$TEMP_DIR"/scince_$FILENUM.exe)
+        curl -sLo "$TEMP_DIR"/scince_$FILENUM.exe https://gaia.inegi.org.mx/scince2020desktop/$FILENUM/SCINCE2020_DATOS_$FILENUM.exe
+        cd "$TEMP_DIR" && innoextract --lowercase --silent "$TEMP_DIR"/scince_$FILENUM.exe
         find "$TEMP_DIR"/app -depth -type f -regextype posix-extended \
              -regex '.*\.(dbf|cpg|prj|shp|rtree|shx)' \
              -execdir sh -c 'mv $1 "$2"_$(basename $1)' _ {} "${states[$i]}" \;
         DIR=$(find "$TEMP_DIR"/app -mindepth 1 -maxdepth 1 -type d -name '[0-9]*' -print)
-        mv "$DIR" "$LOCAL_DIR/scince_2020/${states[$i]}"
+        mv "$DIR" "$OUT_DIR/${states[$i]}"
+        echo "$OUT_DIR/${states[$i]}"
         rm -rf "$TEMP_DIR"/app "$TEMP_DIR"/tmp
      done
 }
